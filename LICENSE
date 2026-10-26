@@ -34,8 +34,8 @@ work and property of their authors and are subject to their own terms:
   - The data in data/, which come from Acemoglu, D., S. Johnson, J. A.
     Robinson, and P. Yared (2008), "Income and Democracy," American Economic
     Review 98(3), 808-842, https://www.jstor.org/stable/29730096,
-	as distributed in Bonhomme and Manresa's replication files, and the 
-	groupings, standard errors, and related results transcribed from those files.
+    as distributed in Bonhomme and Manresa's replication files, and the
+    groupings, standard errors, and related results transcribed from those files.
 
 If you use this code, please cite Bonhomme and Manresa (2015); see CITATION.md.
 
