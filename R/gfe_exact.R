@@ -47,6 +47,11 @@
 ## where Q*(remaining) is the optimum for the remaining units on their own.
 ## The "repetitive" part of Brusco's method computes these Q*(.) by solving
 ## the problem for the last G+1, G+2, ..., N units in turn.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 #' Exact GFE solution by repetitive branch and bound (balanced panels).

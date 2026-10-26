@@ -27,7 +27,8 @@ fixed-T variance, the Monte Carlo design, and the extensions):
 Please also cite, as relevant:
 
 - the data: Acemoglu, D., S. Johnson, J. A. Robinson, and P. Yared (2008),
-  "Income and Democracy," *American Economic Review* 98(3), 808–842;
+  "Income and Democracy," *American Economic Review* 98(3), 808–842,
+  https://www.jstor.org/stable/29730096;
 - the exact algorithm (`gfe_exact_bb()`): Brusco, M. J. (2006), "A Repetitive
   Branch-and-Bound Procedure for Minimum Within-Cluster Sums of Squares
   Partitioning," *Psychometrika* 71(2), 347–363;
@@ -64,6 +65,10 @@ Bonhomme and Manresa (2015):
   url    = {https://erweinstein.com}
 }
 ```
+
+The R translation is licensed under the GNU General Public License, version 2
+or (at your option) any later version; see `LICENSE`, which also explains what
+the license does and does not cover.
 
 The R translation is not endorsed by, and was not reviewed by, the original
 authors. Differences from their code and results are documented in README.md;

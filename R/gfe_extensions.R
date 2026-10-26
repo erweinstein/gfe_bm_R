@@ -22,6 +22,11 @@
 ##       whose time profiles differ from the group profile only by a constant:
 ##       alpha_{(g,h) t} = a_{g t} + b_{g h}
 ##       [GFE_twolayers_computation.m and GFE_twolayers_estimates.m; Figure S.6].
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 

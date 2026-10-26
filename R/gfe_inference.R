@@ -20,6 +20,11 @@
 ##
 ## The original code is by Stephane Bonhomme and Elena Manresa; this is a
 ## translation into R.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 

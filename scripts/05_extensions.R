@@ -19,6 +19,11 @@
 ## By default the script evaluates the published groupings (and, for the
 ## heterogeneous-coefficient models, the groupings found by this R code; see
 ## below), so it runs in seconds. The flags turn on the searches.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")

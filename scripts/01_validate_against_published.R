@@ -21,6 +21,11 @@
 ## Published values are reported to 3 decimals. They appear to have been
 ## rounded from 4-decimal MATLAB output (e.g. 0.406464 -> 0.4065 -> 0.407), so
 ## "match" means agreement after rounding to 3 decimals, directly or via 4.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")

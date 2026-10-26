@@ -24,6 +24,11 @@
 ##
 ## Consistency: G_hat is consistent for G0 if N and T grow at the same rate;
 ## if T/N -> 0 the BIC need not be consistent (Section S.3.2).
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 #' Information criteria for a list of GFE fits with different G.

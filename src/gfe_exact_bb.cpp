@@ -10,6 +10,11 @@
 // names follow the R function line by line.
 //
 // Compiled on first use by Rcpp::sourceCpp() (Windows users need Rtools).
+//
+// R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+// GPL, version 2 or (at your option) any later version; see LICENSE. The
+// license covers the translation only, not Bonhomme and Manresa's method or
+// original code.
 // =============================================================================
 #include <Rcpp.h>
 #include <vector>

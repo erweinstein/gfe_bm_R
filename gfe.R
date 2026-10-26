@@ -15,6 +15,11 @@
 ## Dependencies: base R only. Optional: Rcpp (compiled exact algorithm; on
 ## Windows it needs Rtools), haven (reading the original .dta files). The
 ## parallel package used for the bootstrap and Monte Carlo ships with R.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 local({

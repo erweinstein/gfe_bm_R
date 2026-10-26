@@ -22,6 +22,11 @@
 ## and in its Supplementary Appendix.
 ##
 ## Run from the project root:  Rscript tools/make_published_groupings.R
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 groupings <- list(

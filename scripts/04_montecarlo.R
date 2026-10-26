@@ -48,6 +48,11 @@
 ## simulation noise of the order 1/sqrt(n_rep). Set `cores` to use several
 ## processors. Each replication sets its own seed (seed + r), so the results
 ## do not depend on the number of cores.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")

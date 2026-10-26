@@ -26,6 +26,11 @@
 ##   lag_income1970 log GDP per capita in 1965
 ##   education1970  average years of schooling, 1970
 ##   rel_catho80, rel_protmg80  shares of Catholic and Protestant, 1980
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")

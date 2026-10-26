@@ -4,6 +4,11 @@
 ##
 ## Part of an R reimplementation of Bonhomme and Manresa (2015), "Grouped
 ## Patterns of Heterogeneity in Panel Data," Econometrica 83(3), 1147-1184.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 

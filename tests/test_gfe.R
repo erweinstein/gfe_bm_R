@@ -7,6 +7,11 @@
 ## (brute force, lm(), a direct matrix formula). No packages needed:
 ##   Rscript tests/test_gfe.R          (from the project folder)
 ## Validation against the published numbers is in scripts/01_validate_*.R.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")

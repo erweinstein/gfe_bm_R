@@ -22,6 +22,11 @@
 ##
 ## In each case we also run Algorithm 1 and VNS, and report whether they reach
 ## the exact optimum: that is the comparison made in Table S.I.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")

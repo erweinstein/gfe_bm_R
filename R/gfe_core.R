@@ -42,6 +42,11 @@
 ##   d : optional 0/1 vector of length N*T marking observed (i,t) cells in an
 ##       unbalanced panel. As in GFE_code.do, missing cells carry y = x = 0 and
 ##       d = 0, and drop out of every sum.
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 

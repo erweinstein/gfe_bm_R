@@ -67,6 +67,9 @@ on Windows.
 ## What is here
 
 ```
+LICENSE                   GNU GPL (>= 2) for the R translation, with scope note
+CITATION.md               how to cite the paper, the data, and this translation
+EXAMPLE.md                a first exercise: change G and the starting values
 gfe.R                     loads the code; load_bm_panel(), load_bm_published()
 R/gfe_core.R              the estimator: update step, assignment step,
                           Algorithm 1, local search, VNS (Algorithm 2)
@@ -89,7 +92,6 @@ scripts/04_montecarlo.R                   Tables S.III-S.VIII, Figure S.1
 scripts/05_extensions.R                   Tables S.XIV-S.XVI, Figures S.5-S.7
 scripts/06_explaining_the_waves.R         Tables S.XVII-S.XVIII
 tests/test_gfe.R          unit tests against brute force, lm(), direct formulas
-EXAMPLE.md                a first exercise: change G and the starting values
 GFE_walkthrough.qmd       a reading of the paper with the code (Quarto)
 GFE_walkthrough.html      the same, rendered (opens in any browser)
 tools/make_published_groupings.R  transcribes the authors' groupings
@@ -109,7 +111,9 @@ output/                   tables (CSV) and figures (PDF) written by the scripts
 | `rcode_hetero_groupings.csv` | groupings for the heterogeneous-coefficient models | found by this R code (not published by the authors) |
 
 The underlying data are from Acemoglu, Johnson, Robinson, and Yared (2008),
-"Income and Democracy," *AER* 98(3), 808–842.
+"Income and Democracy," *AER* 98(3), 808–842,
+[jstor.org/stable/29730096](https://www.jstor.org/stable/29730096). They remain
+subject to their original terms (see "License" below).
 
 ---
 
@@ -244,3 +248,19 @@ These are documented in the code where they occur.
 - Each script states what it reproduces, sets its expensive options at the top
   (with the paper's values in comments), and defaults to settings that run in
   seconds or minutes.
+
+---
+
+## License
+
+The R translation is Copyright (C) 2026 Eliot R. Weinstein and is licensed
+under the GNU General Public License, version 2 or (at your option) any later
+version; see `LICENSE`.
+
+The license covers only the translation: the R and C++ code, the scripts, the
+tests, and the documentation. It grants no rights in the grouped fixed-effects
+method and the original MATLAB, Fortran, and Stata code, which are Stéphane
+Bonhomme and Elena Manresa's, or in the data, which come from Acemoglu,
+Johnson, Robinson, and Yared (2008) via Bonhomme and Manresa's replication
+files. Both remain subject to their own terms. If you use this code, please
+cite Bonhomme and Manresa (2015); see `CITATION.md`.

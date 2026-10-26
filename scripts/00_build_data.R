@@ -20,6 +20,11 @@
 ## authors' copy of 5yearpanel.dta, restricted to the 90 sample countries and
 ## 1965-2000, the years needed for the lags), or the full .dta via `dta_path`.
 ## Original data: http://economics.mit.edu/faculty/acemoglu/data/ajry2008
+##
+## R translation Copyright (C) 2026 Eliot R. Weinstein. Licensed under the GNU
+## GPL, version 2 or (at your option) any later version; see LICENSE. The
+## license covers the translation only, not Bonhomme and Manresa's method or
+## original code.
 ## =============================================================================
 
 source("gfe.R")
