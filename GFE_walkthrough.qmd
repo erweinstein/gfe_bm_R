@@ -1,0 +1,370 @@
+---
+title: "Grouped Patterns of Heterogeneity in Panel Data: a walkthrough in R"
+subtitle: "Following Bonhomme and Manresa (2015, *Econometrica*)"
+author:
+  - name: Eliot R. Weinstein
+    email: eliotw@uchicago.edu
+    url: https://erweinstein.com
+format:
+  html:
+    toc: true
+    number-sections: true
+    code-fold: false
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(fig.width = 11, fig.height = 3.8, fig.align = "center", comment = "")
+source("gfe.R")
+```
+
+::: {.callout-note}
+## Credit {.unnumbered}
+
+The grouped fixed-effects (GFE) estimator, its theory, the algorithms, the
+empirical application, and the original MATLAB, Fortran, and Stata code are by
+**Stéphane Bonhomme and Elena Manresa**:
+
+Bonhomme, S. and E. Manresa (2015), "Grouped Patterns of Heterogeneity in Panel
+Data," *Econometrica* 83(3), 1147–1184. [doi:10.3982/ECTA11319](https://doi.org/10.3982/ECTA11319)
+
+This document walks through their paper with an R translation of their
+replication files. The structure of the argument, the notation, and the
+numbers come from the paper and its Supplementary Appendix. The R
+translation and this walkthrough are by Eliot R. Weinstein; errors of
+translation are mine.
+:::
+
+# The question
+
+Panel data let us control for unobserved heterogeneity, and the standard way to
+do so is with unit fixed effects. Fixed effects are time-invariant. In many
+applications, though, the unobservables we worry about move over time, and they
+move differently for different units. Bonhomme and Manresa's application is a
+clear case: the relationship between income and democracy. In a large
+cross-country panel, pooled regressions show a strong positive association
+between lagged income and democracy, and fixed-effects regressions show
+essentially none (Acemoglu, Johnson, Robinson, and Yared, 2008). A fixed effect
+absorbs a country's average level of democracy. It cannot absorb the fact that
+Spain and Portugal democratized in the 1970s, much of Latin America in the
+1980s, and much of Sub-Saharan Africa in the 1990s.
+
+Interactive (factor) fixed effects allow for time-varying unobservables, at the
+price of many parameters and a bias of order $1/T$ in short panels. Bonhomme
+and Manresa propose a more parsimonious structure: unobserved heterogeneity
+varies over time, but countries fall into a small number of groups that share
+the same time path. Group membership is not known; it is estimated from the
+data.
+
+# The model and the estimator
+
+For units $i = 1, \dots, N$ and periods $t = 1, \dots, T$,
+
+$$
+y_{it} = x_{it}'\theta + \alpha_{g_i t} + v_{it},
+$$
+
+where $g_i \in \{1, \dots, G\}$ is the group of unit $i$, and $\alpha_{gt}$ is
+the time effect of group $g$ in period $t$. Units in the same group share the
+same path $(\alpha_{g1}, \dots, \alpha_{gT})$. The grouping
+$\gamma = \{g_1, \dots, g_N\}$, the paths $\alpha$, and the common
+coefficients $\theta$ are all parameters.
+
+The GFE estimator minimizes the sum of squared residuals over all three:
+
+$$
+(\hat\theta, \hat\alpha, \hat\gamma) = \underset{(\theta, \alpha, \gamma)}{\operatorname{argmin}}
+\sum_{i=1}^N \sum_{t=1}^T \left( y_{it} - x_{it}'\theta - \alpha_{g_i t} \right)^2 .
+$$
+
+Two observations organize everything that follows.
+
+1. **Given the grouping, the problem is OLS.** With $\gamma$ fixed, $\theta$ and
+   $\alpha$ are the coefficients of a regression of $y_{it}$ on $x_{it}$ and a
+   full set of group-by-period dummies.
+
+2. **Given the parameters, the grouping is a nearest-path assignment.** With
+   $(\theta, \alpha)$ fixed, each unit goes to the group whose path is closest
+   to its own residual path:
+   $$
+   \hat g_i(\theta, \alpha) = \underset{g \in \{1,\dots,G\}}{\operatorname{argmin}}
+   \sum_{t=1}^T \left( y_{it} - x_{it}'\theta - \alpha_{gt} \right)^2 .
+   $$
+
+Without covariates this is exactly the $k$-means problem, with $N$ points in
+$\mathbb{R}^T$ and $G$ centers. With covariates it is $k$-means in which the
+points themselves, $y_i - x_i\theta$, depend on the parameter being estimated.
+
+## The data
+
+The application uses the five-year balanced panel of Acemoglu et al. (2008):
+90 countries observed every five years from 1970 to 2000. The outcome is the
+Freedom House democracy index (between 0 and 1), and the covariates are lagged
+democracy and lagged log GDP per capita:
+
+$$
+\text{dem}_{it} = \theta_1 \, \text{dem}_{i,t-1} + \theta_2 \, \text{income}_{i,t-1} + \alpha_{g_i t} + v_{it}.
+$$
+
+The quantity of interest is the cumulative income effect $\theta_2 / (1 - \theta_1)$.
+
+```{r}
+#| label: data
+p <- load_bm_panel()
+c(N = p$N, T = p$T, K = p$K)
+head(attr(p, "data"), 8)
+```
+
+The data are stacked unit by unit, as in the original code: row $(i-1)T + t$
+holds unit $i$ in period $t$.
+
+# Computation
+
+The number of possible groupings is $G^N$; with $N = 90$ and $G = 4$ that is
+about $10^{54}$. Exhaustive search is out of the question, so the paper gives
+two heuristics and an exact method to check them.
+
+## Algorithm 1: alternate between the two steps
+
+Start from random $(\theta^{(0)}, \alpha^{(0)})$. Then iterate:
+
+- *assignment*: $g_i^{(s+1)} = \hat g_i(\theta^{(s)}, \alpha^{(s)})$ for every $i$;
+- *update*: $(\theta^{(s+1)}, \alpha^{(s+1)})$ = OLS given the grouping $\gamma^{(s+1)}$;
+
+until the grouping no longer changes. Each step weakly lowers the objective, so
+the algorithm converges, but only to a local minimum. The answer depends on the
+starting values, which is why the paper runs it from many of them.
+
+```{r}
+#| label: alg1-starts
+set.seed(1)
+a1 <- gfe(p, G = 3, algorithm = "alg1", n_starts = 200)
+a1
+```
+
+The distribution of the objective across starting values shows how many local
+minima there are:
+
+```{r}
+#| label: alg1-hist
+#| fig-width: 6
+#| fig-height: 3.5
+hist(a1$objectives_by_start, breaks = 40, col = "gray80", border = "white",
+     main = "", xlab = "objective at convergence, Algorithm 1 (G = 3, 200 starts)")
+abline(v = min(a1$objectives_by_start), lwd = 2)
+```
+
+## Algorithm 2: variable neighborhood search
+
+Variable neighborhood search (VNS) adds two moves to Algorithm 1: a *local
+search* that tries to move each unit, one at a time, to every other group and
+keeps any move that lowers the objective; and random *jumps* that relocate
+$n = 1, 2, \dots$ units at once, to escape a local minimum. The tuning
+parameters $(N_s; n_{\max}; j_{\max})$ are the number of starts, the largest
+jump, and the number of passes without improvement. The paper uses
+$(10; 10; 10)$ for the main estimates and recommends checking that different
+starting values yield exactly the same solution.
+
+```{r}
+#| label: vns
+set.seed(2)
+v3 <- gfe(p, G = 3, algorithm = "vns", n_starts = 3, neighmax = 10, itermax = 10)
+v3
+```
+
+The local search is cheap because the objective can be written in terms of
+group-by-period sums of $(y_{it}, x_{it}')'$ and their cross products, so
+moving one unit only updates two groups' sums (see `gfe_stats()` in
+`R/gfe_core.R`).
+
+## Checking the heuristics: an exact solution
+
+The Supplementary Appendix verifies the heuristics on subsamples where the
+global minimum can be certified, with an extension of Brusco's (2006) branch
+and bound to models with covariates. For the first 30 countries and $G = 2$,
+the exact solution and both heuristics coincide (`scripts/03_exact_algorithm.R`;
+about a minute with the compiled engine). A toy version:
+
+```{r}
+#| label: exact-toy
+set.seed(3)
+toy <- gfe_panel(y = rnorm(40), X = matrix(rnorm(80), 40, 2), N = 10, T = 4)
+c(brute_force    = gfe_bruteforce(toy, 2)$objective,          # all 2^10 groupings
+  branch_bound   = gfe_exact_bb(toy, 2, engine = "R")$objective,
+  vns            = gfe(toy, 2, n_starts = 2)$objective)
+```
+
+## Does the search find the published solution?
+
+The authors' optimal groupings are hard-coded in their MATLAB files; we ship
+them in `data/bm_published_groupings.csv`. The VNS solution above should be the
+same partition of countries, up to a relabeling of the groups:
+
+```{r}
+#| label: vns-vs-published
+pub <- load_bm_published()
+f3  <- gfe(p, 3, groups = pub$groupings$G3)
+c(published = f3$objective, vns = v3$objective)
+match_groups(v3$groups, f3$groups, 3)$misclassification
+```
+
+# Estimates and the number of groups
+
+Given the groupings, the estimates for $G = 1, \dots, 15$ follow in a fraction
+of a second. $G = 1$ is the model with common time effects and no unit effects.
+
+```{r}
+#| label: estimates-by-G
+fits <- lapply(1:15, function(G)
+  gfe(p, G, groups = if (G == 1) NULL else pub$groupings[[paste0("G", G)]]))
+bic <- gfe_bic(fits)
+cum <- function(th) th[2] / (1 - th[1])
+est <- data.frame(G = 1:15,
+                  objective  = sapply(fits, `[[`, "objective"),
+                  BIC        = bic$BIC,
+                  theta1     = sapply(fits, function(f) f$theta[1]),
+                  theta2     = sapply(fits, function(f) f$theta[2]),
+                  cumulative = sapply(fits, function(f) cum(f$theta)))
+print(round(est, 3), row.names = FALSE)
+```
+
+These are the point estimates of Table S.XI. The BIC,
+
+$$
+\mathrm{BIC}(G) = \frac{1}{NT} \hat Q(G) + \hat\sigma^2 \, \frac{GT + N + K}{NT} \, \ln(NT),
+\qquad \hat\sigma^2 = \frac{\hat Q(G_{\max})}{NT - G_{\max}T - N - K},
+$$
+
+selects $G = `r attr(bic, "G_BIC")`$. The paper's headline results use $G = 4$,
+which is easier to interpret and gives very similar estimates of the income
+effect. Compare with the two benchmarks: the cumulative effect is
+`r round(est$cumulative[1], 3)` with common time effects only ($G = 1$),
+and with country fixed effects
+
+```{r}
+#| label: fixed-effects
+fe <- gfe(gfe_within(p), 1)
+round(c(theta1 = fe$theta[[1]], theta2 = fe$theta[[2]], cumulative = cum(fe$theta)), 3)
+```
+
+GFE lands in between: allowing countries to follow a handful of distinct
+democratization paths roughly halves the pooled income effect, without wiping
+it out.
+
+# Inference
+
+Theorem 2 of the paper shows that, as $N$ and $T$ grow with $N/T^\nu \to 0$
+for some $\nu > 0$, misclassification vanishes fast enough for $\hat\theta$ to
+be asymptotically equivalent to OLS with the true groups. Standard errors can
+then be computed as if the estimated groups were known, clustering by unit
+(the "large-$T$" variance). With $T = 7$, that is optimistic. The paper also
+reports a fixed-$T$ variance, based on Pollard's (1982) asymptotics for
+$k$-means, which accounts for units near the boundary between two groups, and a
+bootstrap that resamples whole countries.
+
+```{r}
+#| label: inference-G4
+f4 <- fits[[4]]
+cum_grad <- function(th) c(th[2] / (1 - th[1])^2, 1 / (1 - th[1]))
+V_lt <- gfe_vcov_largeT(f4)
+V_ft <- gfe_vcov_fixedT(f4, eps = gfe_bandwidth(f4))
+boot <- subset(pub$bootstrap_se, G == 4)
+se <- rbind(
+  `large-T`   = c(gfe_se_theta(f4, V_lt), sqrt(gfe_delta(f4, V_lt, cum_grad(f4$theta)))),
+  `fixed-T`   = c(gfe_se_theta(f4, V_ft), sqrt(gfe_delta(f4, V_ft, cum_grad(f4$theta)))),
+  `bootstrap` = unlist(boot[, c("se_lag_dem", "se_lag_income", "se_cumulative_income")]))
+colnames(se) <- c("theta1", "theta2", "cumulative")
+round(rbind(estimate = c(theta1 = f4$theta[[1]], theta2 = f4$theta[[2]], cumulative = cum(f4$theta)), se), 3)
+```
+
+The fixed-$T$ and bootstrap standard errors are larger than the large-$T$ ones.
+The Monte Carlo exercises of the Supplementary Appendix, calibrated to these
+data (`scripts/04_montecarlo.R`), show that the large-$T$ intervals undercover
+at this sample size, while the fixed-$T$ and bootstrap intervals have close to
+nominal coverage. (The bootstrap row uses the authors' 100 replications;
+`gfe_bootstrap()` recomputes it.)
+
+# Grouped patterns of democracy
+
+With $G = 4$ the estimated paths have a clear interpretation: a
+high-democracy group, a low-democracy group, and two groups that democratize,
+an "early transition" group in the 1970s and 1980s and a "late transition"
+group in the 1990s.
+
+```{r}
+#| label: figure2
+#| fig-height: 4.3
+paper_labels <- c(2, 3, 4, 1)      # published label -> paper's label (see scripts/02)
+f4 <- gfe(p, 4, groups = paper_labels[pub$groupings$G4])
+cols <- gray(c(0, 0.6, 0.4, 0.75)); ltys <- c(1, 4, 2, 1)
+op <- par(mfrow = c(1, 3), mar = c(4.5, 4.5, 1, 1), oma = c(2, 0, 0, 0))
+plot_profiles(f4$alpha, p$time_labels, ylab = "time effects", col = cols, lty = ltys)
+plot_profiles(group_means(f4, p$y), p$time_labels, ylab = "democracy", ylim = c(0, 1), col = cols, lty = ltys)
+plot_profiles(group_means(f4, p$X[, "lag_income"]), p$time_labels, ylab = "income", ylim = c(7, 9.5),
+              col = cols, lty = ltys)
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", axes = FALSE, xlab = "", ylab = "")
+legend("bottom", c("1: high democracy", "2: low democracy", "3: early transition", "4: late transition"),
+       col = cols, lty = ltys, lwd = 3, horiz = TRUE, bty = "n")
+par(op)
+```
+
+```{r}
+#| label: membership
+split(names(f4$groups), factor(f4$groups, labels = c("high democracy", "low democracy", "early transition", "late transition")))
+```
+
+The time effects (left panel) are net of the effect of lagged democracy and
+income; the middle and right panels are raw group averages. In 1970 the late
+transition group looks much like the low-democracy group, in democracy and in
+income, yet the two paths separate sharply in the 1990s.
+
+# Robustness and extensions
+
+The Supplementary Appendix asks whether this classification is an artifact of
+the specification. `scripts/05_extensions.R` reproduces each exercise:
+
+- **Country fixed effects plus grouped patterns.** Applying GFE to deviations
+  from country means removes time-invariant country effects. The income effect
+  then disappears, as with fixed effects, but the classification into stable,
+  early-transition, and late-transition countries survives: with $G = 3$ it
+  agrees with the baseline $G = 4$ classification for 80 of the 90 countries.
+- **Two layers of groups.** Within each of three time-varying groups,
+  subgroups differ by a constant.
+- **Heterogeneous coefficients.** Allowing the income coefficient (or both
+  coefficients) to differ across groups leaves the grouped patterns intact.
+- **Explaining group membership.** `scripts/06_explaining_the_waves.R`
+  relates the groups to historical and economic covariates with multinomial
+  logits: constraints on the executive at independence separate high- from
+  low-democracy countries, but nothing in the list predicts which
+  non-democracies transition.
+
+# Notes on the workflow
+
+A few features of the paper and its replication files are worth imitating.
+
+- *The estimator is an optimization problem first.* Everything (estimation,
+  inference, model selection, extensions) is built on the same two steps:
+  OLS given the groups, and assignment given the parameters.
+- *Computation is checked, not assumed.* Many starting values, an explicit
+  rule ("different starting values should yield the exact same solution"),
+  and an exact algorithm to certify the heuristics on subsamples.
+- *Theory is paired with a calibrated simulation.* The Monte Carlo design
+  takes its parameters from the estimates on the actual data, so the
+  finite-sample evidence speaks to the application at hand.
+- *Robustness is organized around the main finding.* Each extension asks
+  whether the grouped patterns survive a specific objection.
+
+# References
+
+- Acemoglu, D., S. Johnson, J. A. Robinson, and P. Yared (2008), "Income and Democracy," *American Economic Review* 98(3), 808–842.
+- Bonhomme, S. and E. Manresa (2015), "Grouped Patterns of Heterogeneity in Panel Data," *Econometrica* 83(3), 1147–1184, and Supplementary Appendix.
+- Brusco, M. J. (2006), "A Repetitive Branch-and-Bound Procedure for Minimum Within-Cluster Sums of Squares Partitioning," *Psychometrika* 71(2), 347–363.
+- Hansen, P. and N. Mladenović (2001), "Variable Neighborhood Search: Principles and Applications," *European Journal of Operational Research* 130(3), 449–467.
+- Pollard, D. (1982), "A Central Limit Theorem for k-Means Clustering," *Annals of Probability* 10(4), 919–926.
