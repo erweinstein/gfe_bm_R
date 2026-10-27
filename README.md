@@ -251,6 +251,15 @@ These are documented in the code where they occur.
 
 ---
 
+## Python version
+
+A Python translation of this code, following the same structure file for file,
+is at [github.com/erweinstein/gfe_bm_python](https://github.com/erweinstein/gfe_bm_python)
+(BSD 3-Clause License, the convention of the scientific Python community). It
+reproduces the same published numbers.
+
+---
+
 ## License
 
 The R translation is Copyright (C) 2026 Eliot R. Weinstein and is licensed
