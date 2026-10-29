@@ -16,7 +16,7 @@ branch-and-bound extension), the fixed-T variance, the Monte Carlo design, the
 empirical application, and the original MATLAB, Fortran, and Stata code are the
 work of **Stéphane Bonhomme and Elena Manresa**. This folder translates their
 replication package (`Bonhomme_Manresa_codes`, distributed with the paper by the
-Econometric Society) into R, for study and reuse. Every source file names the
+Econometric Society and on [Stéphane Bonhomme's website](https://sites.google.com/site/stephanebonhommeresearch/)) into R, for study and reuse. Every source file names the
 original file it follows. Please cite their paper when you use this code
 (see `CITATION.md`). The R translation is by Eliot R. Weinstein; it was not
 reviewed by the original authors, and errors introduced in translation are his.
@@ -170,7 +170,8 @@ of the 95% large-T intervals is 0.78–0.88; for fixed-T intervals it is
 `output/montecarlo_G3_iid.csv`).
 
 **BIC choice of G (Table S.VIII): reproduced, once the original code's
-variance estimate is used.** The published G0 = 3 result (G = 3 in 98% of
+variance estimate is used.** Full account in
+[`NOTE_BIC_tableS8.md`](NOTE_BIC_tableS8.md). The published G0 = 3 result (G = 3 in 98% of
 samples, G = 4 in 2%) comes from one line of `MonteCarlo/BIC_G3_MC.m`:
 `BigG = load('assignmentG010G15.txt')`. It computes sigma2_hat for the G0 = 3
 samples from the G = 15 groupings estimated on the G0 = 10 samples, so the
