@@ -169,6 +169,19 @@ of the 95% large-T intervals is 0.78–0.88; for fixed-T intervals it is
 0.92–0.98. With 50 replications the means and coverage rates are noisy (see
 `output/montecarlo_G3_iid.csv`).
 
+**BIC choice of G (Table S.VIII): does not reproduce the published result.**
+With G0 = 3 and the penalty in (S20), sigma2_hat taken from G = 15 as in
+footnote 12 of the appendix, the BIC chose G = 6 in 29 of 30 samples and G = 5
+in 1. The Python translation agrees (G = 6 in 90 of 100, G = 5 in 10). The
+paper reports G = 3 in 98%. Two things contribute but neither explains the gap
+alone: sigma2_hat averages 0.021-0.024 against a true 0.032, so the penalty is
+too small; and even with the true variance plugged in, the BIC chose G = 3 in
+only 4-6 of 20 samples (mostly G = 4). A stronger optimizer (VNS) makes the
+choice worse, not better (G = 6 in 19 of 20), so it is not a search failure.
+The original `MonteCarlo/BIC_G3_MC.m` is needed to find the difference; until
+then, do not rely on the BIC Monte Carlo here. Details are in the Python
+README.
+
 **Extensions.** Table S.XIV (deviations from country means): 20 of 20 entries.
 Table S.XV (first-differenced IV): 20 of 20 coefficients and standard errors.
 Table S.XVI version B (heterogeneous income coefficient): the R search
