@@ -65,8 +65,17 @@ vns_tuning  <- list(n_starts = 5, neighmax = 10, itermax = 5)   # (5; 10; 5)
 bootstrap_B <- 0          # 100 in the paper (with Algorithm 1, 1,000 starts)
 boot_tuning <- list(algorithm = "alg1", n_starts = 100)          # paper: 1,000 starts
 run_bic     <- FALSE      # Table S.VIII: BIC choice of G across simulated samples
-bic_G       <- 1:6        # G values compared by BIC
-bic_Gmax    <- 15         # G used for sigma2_hat in the BIC penalty (as in BIC_G3_MC.m)
+bic_G       <- if (G0 == 10) 3:15 else 1:7   # G values compared (as in BIC_G3_MC.m, BIC_G10_MC.m)
+bic_Gmax    <- 15         # G used for sigma2_hat in the BIC penalty (footnote 12)
+## Where the G = 15 grouping for sigma2_hat comes from:
+##   "own"   each sample's own G = 15 fit, as (S20) and footnote 12 describe (and as
+##           BIC_G10_MC.m does);
+##   "g0_10" as BIC_G3_MC.m does for G0 = 3: it loads assignmentG010G15.txt, the
+##           G = 15 groupings estimated on the G0 = 10 samples, and applies them to
+##           the G0 = 3 samples. They do not fit the G0 = 3 data, so sigma2_hat is
+##           about twice as large, and the penalty with it. This reproduces the
+##           published Table S.VIII (G = 3 in 98%); "own" chooses G = 5-6.
+bic_sigma2  <- "own"
 cores       <- 1
 seed        <- 20150501
 
@@ -82,12 +91,17 @@ cum   <- function(th) th[2] / (1 - th[1])
 cum_grad <- function(th) c(th[2] / (1 - th[1])^2, 1 / (1 - th[1]))
 theta0 <- c(truth$theta, cumulative = cum(truth$theta))
 sigma2_naive <- truth$objective / (N * T - G0 * T - N - K)
+truth10 <- NULL; sigma2_10 <- NULL
+if (run_bic && bic_sigma2 == "g0_10") {
+  truth10   <- gfe(p, 10, groups = pub$groupings$G10)
+  sigma2_10 <- truth10$objective / (N * T - 10 * T - N - K)
+}
 cat(sprintf("True values (G0 = %d): theta1 = %.4f, theta2 = %.4f, cumulative = %.4f; sigma = %.4f\n",
             G0, theta0[1], theta0[2], theta0[3], sqrt(sigma2_naive)))
 
 #' Simulate one data set from the DGP of DGP_final.m.
 #' Returns a balanced gfe_panel with the same layout as the data.
-simulate_panel <- function(truth, dgp = c("iid", "wild", "resample")) {
+simulate_panel <- function(truth, dgp = c("iid", "wild", "resample"), sigma2_naive = get("sigma2_naive", envir = globalenv())) {
   dgp <- match.arg(dgp)
   p <- truth$panel; N <- p$N; T <- p$T
   ehat <- matrix(truth$residuals, T, N)                  # T x N GFE residuals
@@ -140,7 +154,15 @@ one_replication <- function(r) {
   if (run_bic) {
     Q <- sapply(bic_G, function(G) if (G == 1) gfe(ps, 1)$objective else
       do.call(gfe, c(list(panel = ps, G = G, algorithm = "vns"), vns_tuning))$objective)
-    Qmax <- do.call(gfe, c(list(panel = ps, G = bic_Gmax, algorithm = "vns"), vns_tuning))$objective
+    if (bic_sigma2 == "g0_10") {
+      ## Emulates BIC_G3_MC.m: a G = 15 grouping estimated on an independent G0 = 10
+      ## sample, applied to this G0 = 3 sample.
+      p10 <- simulate_panel(truth10, dgp, sigma2_10)
+      g15 <- do.call(gfe, c(list(panel = p10, G = bic_Gmax, algorithm = "vns"), vns_tuning))$groups
+      Qmax <- gfe(ps, bic_Gmax, groups = g15)$objective
+    } else {
+      Qmax <- do.call(gfe, c(list(panel = ps, G = bic_Gmax, algorithm = "vns"), vns_tuning))$objective
+    }
     out$bic_Q <- Q
     out$bic_sigma2 <- Qmax / (N * T - bic_Gmax * T - N - K)
   }
@@ -156,7 +178,7 @@ if (cores > 1) {
   parallel::clusterCall(cl, function(files) { for (f in files) source(f); NULL }, .gfe_source_files())
   parallel::clusterExport(cl, c("truth", "theta0", "sigma2_naive", "simulate_panel", "cum", "cum_grad",
                                 "G0", "dgp", "vns_tuning", "bootstrap_B", "boot_tuning", "run_bic",
-                                "bic_G", "bic_Gmax", "seed", "N", "T", "K"))
+                                "bic_G", "bic_Gmax", "bic_sigma2", "truth10", "sigma2_10", "seed", "N", "T", "K"))
   sims <- parallel::parLapply(cl, seq_len(n_rep), one_replication)
   parallel::stopCluster(cl)
 } else {
@@ -236,6 +258,9 @@ if (run_bic) {
   s2 <- mean(sapply(sims, `[[`, "bic_sigma2"))
   bic <- sweep(Qm / NT, 2, s2 * log(NT) * (bic_G * T + N + K) / NT, "+")
   choice <- bic_G[apply(bic, 1, which.min)]
-  cat("\nBIC choice of G across", n_rep, "samples (true G0 =", G0, "):\n")
-  print(table(factor(choice, levels = bic_G)))
+  cat("\nBIC choice of G across", n_rep, "samples (true G0 =", G0, "; sigma2_hat =", round(s2, 4), ", source", bic_sigma2, "):\n")
+  tab <- table(factor(choice, levels = bic_G))
+  print(tab)
+  write.csv(data.frame(G = bic_G, samples = as.vector(tab)),
+            file.path("output", sprintf("tableS8_bic_choice_G%d_%s.csv", G0, bic_sigma2)), row.names = FALSE)
 }

@@ -169,18 +169,21 @@ of the 95% large-T intervals is 0.78–0.88; for fixed-T intervals it is
 0.92–0.98. With 50 replications the means and coverage rates are noisy (see
 `output/montecarlo_G3_iid.csv`).
 
-**BIC choice of G (Table S.VIII): does not reproduce the published result.**
-With G0 = 3 and the penalty in (S20), sigma2_hat taken from G = 15 as in
-footnote 12 of the appendix, the BIC chose G = 6 in 29 of 30 samples and G = 5
-in 1. The Python translation agrees (G = 6 in 90 of 100, G = 5 in 10). The
-paper reports G = 3 in 98%. Two things contribute but neither explains the gap
-alone: sigma2_hat averages 0.021-0.024 against a true 0.032, so the penalty is
-too small; and even with the true variance plugged in, the BIC chose G = 3 in
-only 4-6 of 20 samples (mostly G = 4). A stronger optimizer (VNS) makes the
-choice worse, not better (G = 6 in 19 of 20), so it is not a search failure.
-The original `MonteCarlo/BIC_G3_MC.m` is needed to find the difference; until
-then, do not rely on the BIC Monte Carlo here. Details are in the Python
-README.
+**BIC choice of G (Table S.VIII): reproduced, once the original code's
+variance estimate is used.** The published G0 = 3 result (G = 3 in 98% of
+samples, G = 4 in 2%) comes from one line of `MonteCarlo/BIC_G3_MC.m`:
+`BigG = load('assignmentG010G15.txt')`. It computes sigma2_hat for the G0 = 3
+samples from the G = 15 groupings estimated on the G0 = 10 samples, so the
+groupings do not belong to the data they are applied to; sigma2_hat roughly
+doubles (0.044 against 0.023 from each sample's own G = 15 fit), and so does the
+penalty. Emulating that (`bic_sigma2 <- "g0_10"` in `scripts/04_montecarlo.R`)
+gives G = 3 in 98 of 100 samples and G = 4 in 2 (Python translation, Algorithm 1
+with 100 starts). With the variance estimate the text describes
+(`bic_sigma2 <- "own"`, the default), the BIC chooses G = 5 or 6 (here: G = 6 in
+29 of 30, G = 5 in 1); with the true variance, G = 4 most often. For G0 = 10,
+`BIC_G10_MC.m` uses each sample's own G = 15 fit, and the choice centres on
+G = 9 as published (G = 8-11: 27, 46, 19, 2 of 100, against 10, 42, 42, 6).
+Details and tables are in the Python README (`scripts/04b_bic_tableS8.py`).
 
 **Extensions.** Table S.XIV (deviations from country means): 20 of 20 entries.
 Table S.XV (first-differenced IV): 20 of 20 coefficients and standard errors.
@@ -234,9 +237,14 @@ These are documented in the code where they occur.
   (DGP = 2) multiplies each unit's residual vector by a standard normal draw
   (a wild bootstrap). `scripts/04_montecarlo.R` offers both (`dgp = "wild"`,
   `dgp = "resample"`).
-- **BIC in the Monte Carlo.** `BIC_G3_MC.m` averages the variance estimate
-  sigma2_hat across simulated samples and uses the average in every sample; the
-  script does the same.
+- **BIC in the Monte Carlo.** `BIC_G3_MC.m` and `BIC_G10_MC.m` average the
+  variance estimate sigma2_hat across simulated samples and use the average in
+  every sample; the script does the same. `BIC_G3_MC.m` takes the G = 15
+  groupings for sigma2_hat from the G0 = 10 runs (`assignmentG010G15.txt`),
+  which doubles the penalty and produces the published 98%;
+  `bic_sigma2 <- "g0_10"` emulates it, and the default `"own"` follows the text.
+  The G values compared are now G = 1..7 for G0 = 3 and G = 3..15 for G0 = 10, as
+  in the original scripts.
 - **Misclassification.** The paper minimizes over all G! relabelings (500,000
   random ones for G = 10). `match_groups()` uses the Hungarian algorithm, which
   finds the exact minimum for any G.
