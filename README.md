@@ -183,8 +183,11 @@ with 100 starts). With the variance estimate the text describes
 (`bic_sigma2 <- "own"`, the default), the BIC chooses G = 5 or 6 (here: G = 6 in
 29 of 30, G = 5 in 1); with the true variance, G = 4 most often. For G0 = 10,
 `BIC_G10_MC.m` uses each sample's own G = 15 fit, and the choice centres on
-G = 9 as published (G = 8-11: 27, 46, 19, 2 of 100, against 10, 42, 42, 6).
-Details and tables are in the Python README (`scripts/04b_bic_tableS8.py`).
+G = 9 (G = 8-11: 27, 46, 19, 2 of 100), about half a group below the published
+distribution (10, 42, 42, 6, with G = 9 and 10 equally often); the shift comes
+from how hard the search is, not from the penalty. Details and tables are in the
+Python README (`scripts/04b_bic_tableS8.py`), and why the BIC prefers G = 4 even
+with the true variance for G0 = 3 is in its `NOTE_BIC_overfit.md`.
 
 **Extensions.** Table S.XIV (deviations from country means): 20 of 20 entries.
 Table S.XV (first-differenced IV): 20 of 20 coefficients and standard errors.
